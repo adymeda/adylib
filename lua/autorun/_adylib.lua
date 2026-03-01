@@ -1,7 +1,7 @@
 ADYLIB = {}
 
-local VERSION = "1.0"
---- **[Server/Client]** Return the version of AdyLib
+local VERSION = "1.0.0"
+--- **[Server/Client]** Returns the version of AdyLib
 --- @return string
 function ADYLIB:GetVersion()
     return VERSION
@@ -28,6 +28,7 @@ local LEVELS = {
 ---@param ... unknown
 function Addon:_BaseLog(level, ...)
     level = string.upper(level)
+    if level == "WARNING" and not ADYLIB.Debug then return end
 
     local prefixColor = self.AddonColor or color_white
     MsgC(prefixColor, "[", self.AddonName)
@@ -247,3 +248,5 @@ function ADYLIB:Load()
 end
 
 ADYLIB:Load()
+
+ady = ADYLIB

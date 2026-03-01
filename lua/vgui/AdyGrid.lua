@@ -1,3 +1,4 @@
+---@class AdyGrid: Panel
 local PANEL = {}
 
 function PANEL:Init()

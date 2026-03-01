@@ -16,7 +16,7 @@ end
 net.Receive("ADY/tableflow/Start", function()
     local name = net.ReadString()
     local total = net.ReadUInt(8)
-    
+
     flowData[name] = {
         received = 0,
         total = total,
@@ -50,7 +50,6 @@ net.Receive("ADY/tableflow/End", function()
         flowData[name] = nil
         error("tableflow - incomplete or missing data in " .. name .. ": got " .. received .. " out of " .. total .. " chunks")
     end
-    
 
     local compressedData = table.concat(flowData[name].parts)
     local data = util.Decompress(compressedData)
@@ -79,10 +78,13 @@ net.Receive("ADY/tableflow/Single", function()
        print("[tableflow] Flow " .. name .. " is not handled. Handle it using ADYLIB.tableflow:Receive(" .. name .. ", ...)")
        return
     end
-    
+
     callbacks[name](tbl, 1)
 
     flowData[name] = nil
 end)
 
+ADYLIB = ADYLIB or {}
 ADYLIB.tableflow = tableflow
+
+hook.Run("AdyLib/Tableflow/Loaded")

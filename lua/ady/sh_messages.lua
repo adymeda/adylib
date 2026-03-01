@@ -48,7 +48,7 @@ if SERVER then
     --- Otherwise you can pass `Player` (or table of `Player` objects) who will receive the message.
     ---@param players Player[]|Player|nil
     function MessageBuilder:Send(players)
-        net.Start("ADY:Message")
+        net.Start("ADY/Message")
         for _, part in ipairs(self.Parts) do
             if type(part) == "string" then
                 net.WriteString(part)

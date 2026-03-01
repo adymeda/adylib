@@ -47,6 +47,23 @@ hook.Add("OnScreenSizeChanged", "AdyLib/ScreenResize", function()
     ADYLIB:CalcScales()
 end)
 
+--- **[Client]** UILerp fixes the main problem of Lerp 'tail' that looks strange in UI
+--- No `FrameTime()` or `RealFrameTime()` needed. Delta should be a number that are greater than 0 
+---@param delta number
+---@param from number
+---@param to number
+---@param start? number
+---@return number
+function ADYLIB:UILerp(delta, from, to, start)
+    local k = 20
+    if start then
+        k = math.ceil(math.abs(start - to) / (delta * 1.7))
+    end
+    local abs = math.abs(from - to)
+    local boost = 1 + k/abs
+    return Lerp(FrameTime() * delta * boost, from, to)
+end
+
 -- Colors
 
 --- **[Client]** Transforms any RGB color format to Garry's Mod Color class.
@@ -105,10 +122,22 @@ function ADYLIB:InvertColor(r,g,b,a)
     return ColorInvert(self:ToGModColor(r,g,b,a))
 end
 
+--- **[Client]** TBD
+---@param r integer
+---@param g? integer
+---@param b? integer
+---@param a? integer
+---@return Color
 function ADYLIB:LightenColor(r,g,b,a)
     local color = self:ToGModColor(r,g,b,a)
     local diff = math.min(255 - color.r, 255 - color.g, 255 - color.b)
     return Color(color.r + diff, color.g + diff, color.b + diff, color.a)
+end
+
+function ADYLIB:DarkenColor(r,g,b,a)
+    local color = self:ToGModColor(r,g,b,a)
+    local diff = math.max(color.r, color.g, color.b)
+    return Color(color.r - diff, color.b - diff, color.b - diff, color.a)
 end
 
 -- Blur

@@ -2,6 +2,8 @@
     "adyrewards": {
         "daily_rewards": "Ежедневные награды",
         "raf_refer": "Пригласи друга",
-        "raf_leaderboard": "Таблица лидеров"
+        "raf_leaderboard": "Таблица лидеров",
+
+        "cc_unavailable": "Требуется ранг %rank% или выше"
     }
 }

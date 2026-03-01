@@ -146,6 +146,12 @@ function ADYLIB.Translator:Update(language)
                         if savedSha == sha then
                             local content = file.Read(filepath, "DATA")
                             LoadTranslation(util.JSONToTable(content))
+
+                            -- -- SHA1 GitHub algorithm
+                            -- local contentSize = #content
+                            -- local blob = "blob " .. contentSize .. "\0" .. content
+                            -- local calcSha = util.SHA1(blob)
+                            -- print("\tCalculated: " .. calcSha)
                             continue -- Do nothing cause SHA is the same
                         end
                         ADYLIB:LogDebug("Locale update required for " .. filename)
@@ -189,6 +195,14 @@ local function GetRegexedString(str, regex)
     return str
 end
 
+function RunTranslation(data, str)
+    if type(data.method) == "function" then
+        data.method(data.target, str)
+    else
+        data.target[data.method](data.target, str)
+    end
+end
+
 function ADYLIB.Translator:InvalidateTranslation()
     for i, data in pairs(self.__targets) do
         if not data.target or not IsValid(data.target) then
@@ -200,12 +214,7 @@ function ADYLIB.Translator:InvalidateTranslation()
             str = GetRegexedString(str, data.regex)
         end
 
-        if type(data.method) == "string" then
-            PrintTable(data)
-            data.target[data.method](data.target, str)
-        else
-            data.method(data.target, str)
-        end
+    RunTranslation(data, str)
     end
 end
 
@@ -220,6 +229,7 @@ end
 ---@return string|boolean
 ---@diagnostic disable-next-line: lowercase-global
 function t(name, target, regex)
+    name = string.lower(name)
     local str = ADYLIB.Translator.__cache[name] or name
     if regex then
         str = GetRegexedString(str, regex)
@@ -231,20 +241,30 @@ function t(name, target, regex)
     if not target then
         return str
     end
-    local method = "SetText"
-    if target.panel and target.method then
-        target = target.panel
-        method = target.method or method
-    end
 
-    target:SetText(str)
     local data = {
         name = name,
-        target = target,
-        method = method
+        method = "SetText"
     }
+    if target.method then
+        data.method = target.method
+        data.target = target.panel
+    else data.target = target end
+
+    RunTranslation(data, str)
     table.insert(ADYLIB.Translator.__targets, data)
     return true
 end
 
 ADYLIB.Translator.Translate = t
+
+--- TBD
+---@param translation_name string
+---@return boolean
+function ADYLIB.Translator:HasTranslation(translation_name)
+    translation_name = string.lower(translation_name)
+    for name,_ in pairs(self.__cache) do
+        if name == translation_name then return true end
+    end
+    return false
+end

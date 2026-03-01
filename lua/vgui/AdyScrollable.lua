@@ -1,4 +1,5 @@
 local PANEL_CLASS = "AdyScrollable"
+---@class AdyScrollable: Panel
 local PANEL = {}
 
 function PANEL:Init()
@@ -20,7 +21,7 @@ function PANEL:Init()
         y = 0
     }
 
-    self.ScrollPower = 100
+    self.ScrollPower = 50
     self.ScrollSpeed = 5
     self.MaxOverscroll = 120
 
@@ -107,7 +108,8 @@ function PANEL:LayoutChildren()
             local x,y = child:GetPos()
             maxX = math.max(maxX, x + child:GetWide())
             maxY = math.max(maxY, y + child:GetTall())
-            if child:GetDock() == FILL then
+            local dock = child:GetDock()
+            if dock == FILL or dock == TOP or dock == BOTTOM then
                 maxX = self:GetViewportWide()
             end
         end
@@ -139,8 +141,6 @@ end
 function PANEL:Think()
     self:InvalidateLayout(true)
 end
-
-function PANEL:Paint(w,h) end
 
 
 -- API
@@ -201,6 +201,18 @@ end
 function PANEL:SetScrollbarsMargin(margin)
     self.VerticalScrollbar.Margin = margin
     self.HorizontalScrollbar.Margin = margin
+end
+function PANEL:ScrollToX(x, force)
+    if force then
+        self.Canvas:SetX(x)
+    end
+    self.TargetOffset.x = x
+end
+function PANEL:ScrollToY(y, force)
+    if force then
+        self.Canvas:SetY(y)
+    end
+    self.TargetOffset.y = y
 end
 
 vgui.Register(PANEL_CLASS, PANEL, "Panel")

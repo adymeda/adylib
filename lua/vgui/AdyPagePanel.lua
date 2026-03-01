@@ -1,3 +1,4 @@
+---@class AdyPagePanel: Panel
 local PANEL = {}
 
 function PANEL:Init()
@@ -7,16 +8,23 @@ function PANEL:Init()
     self.PageChangedEvents = {}
 end
 
--- Automatically adds page as a child and centers it
--- This will also make a page invisible in case there are other pages
+function PANEL:Think()
+    if not IsValid(self.Pages[self.Current]) then
+        self:RemovePage(self.Current)
+        self:SetPagePointer(1)
+    end
+end
+
+--- Automatically adds page as a child and centers it
+--- This will also make a page invisible in case there are other pages
 function PANEL:CreatePage(elementType)
     local page = vgui.Create(elementType)
     local index = self:AddPage(page)
     return page, index
 end
 
--- Adds existing VGUI element as a child
--- This will also make a page invisible in case there are other pages
+--- Adds existing VGUI element as a child
+--- This will also make a page invisible in case there are other pages
 function PANEL:AddPage(page)
     page:SetParent(self)
     page:Center()
@@ -96,11 +104,13 @@ function PANEL:SetPagePointer(index)
         end
     end
     local beforePage = self.Pages[self.Current]
-    local beforePageIndex = self.Current
+    if IsValid(beforePage) then
+        local beforePageIndex = self.Current
+        beforePage:SetVisible(false)
+        self:CallPageChange(beforePageIndex)
+    end
     self.Current = index
-    beforePage:SetVisible(false)
     self.Pages[self.Current]:SetVisible(true)
-    self:CallPageChange(beforePageIndex)
 end
 
 function PANEL:GetPagePointer()

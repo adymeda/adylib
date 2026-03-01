@@ -2,6 +2,8 @@
     "adyrewards": {
         "daily_rewards": "Daily Rewards",
         "raf_refer": "Refer a Friend",
-        "raf_leaderboard": "Leaderboard"
+        "raf_leaderboard": "Leaderboard",
+
+        "cc_unavailable": "Available for %rank% and higher ranks"
     }
 }

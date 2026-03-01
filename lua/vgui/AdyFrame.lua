@@ -1,3 +1,4 @@
+---@class AdyFrame: DFrame
 local PANEL = {}
 
 function PANEL:Init()
@@ -38,7 +39,7 @@ function PANEL:Init()
     self.Titlebar.TitleMargin = ADYLIB:ScaleUI(5)
     self.Titlebar.Text = "Window"
     self.Titlebar.Font = ADYLIB:CreateFont({
-        font = "Montserrat",
+        font = "Inter",
         extended = true,
         size = 26,
         weight = 500,
@@ -110,6 +111,19 @@ end
 
 function PANEL:SetTitle(title)
     self.Titlebar.Text = title
+end
+
+function PANEL:GetWide()
+    return self.BaseClass.GetWide(self)
+end
+function PANEL:GetWindowTall()
+    return self.BaseClass.GetTall(self)
+end
+function PANEL:GetTall()
+    return self.BaseClass.GetTall(self) - self:GetTitlebarTall()
+end
+function PANEL:GetSize()
+    return self:GetWide(), self:GetTall()
 end
 
 function PANEL:GetDraggable()
@@ -263,6 +277,9 @@ function PANEL:CreateButton(name, icon)
     button.Name = name
     button:SetText("")
     button:SetTooltip(name)
+    if ADYLIB and ADYLIB.Translator:HasTranslation(name) then
+        t(name, {panel = button, method = "SetTooltip"})
+    end
     function button:Paint(w,h)
         local titlebar = self:GetParent()
         local size = w * titlebar.IconScale
