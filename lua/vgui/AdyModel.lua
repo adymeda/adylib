@@ -38,7 +38,7 @@ function PANEL:Init()
 end
 
 function PANEL.Think(self)
-    self.Zoom.current = Lerp(RealFrameTime() * 5)
+    -- self.Zoom.current = Lerp(RealFrameTime() * 5)
 end
 
 function PANEL:GetZoom()
