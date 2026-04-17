@@ -1,4 +1,5 @@
 ADYLIB = ADYLIB or {}
+ADYLIB.Fonts = ADYLIB.Fonts or {}
 
 local fontCache = {}
 local fontParams = {
@@ -84,3 +85,5 @@ function ADYLIB:CreateFont(tbl)
 
     return name
 end
+
+ADYLIB.Fonts.Get = ADYLIB.CreateFont

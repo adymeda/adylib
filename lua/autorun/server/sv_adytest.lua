@@ -1,8 +1,7 @@
 util.AddNetworkString("AdyLibTest")
 
 hook.Add("PlayerSay", "AdyLibTestCommand", function(ply, text)
-    print(text)
-    if text == "!adytest" then
+    if text == "!test" then
         net.Start("AdyLibTest")
         net.Send(ply)
     elseif text == "!tableflow" then

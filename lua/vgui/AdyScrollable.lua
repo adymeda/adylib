@@ -25,6 +25,9 @@ function PANEL:Init()
     self.ScrollSpeed = 5
     self.MaxOverscroll = 120
 
+    self._CanvasW = 0
+    self._CanvasH = 0
+
     self.VerticalScrollbar = vgui.Create("AdyScrollbar")
     self.VerticalScrollbar:SetWide(8)
     self.VerticalScrollbar:SetParent(self)
@@ -32,16 +35,10 @@ function PANEL:Init()
     self.HorizontalScrollbar:SetTall(8)
     self.HorizontalScrollbar:SetParent(self)
     self.HorizontalScrollbar:SetVertical(false)
-    -- Scolling
+    -- Scrolling
 
     self:SetMouseInputEnabled(true)
     self:SetKeyboardInputEnabled(false)
-end
-
-function PANEL:IsValid()
-    local valid = true
-    if valid then valid = IsValid(self.Canvas) end
-    return valid
 end
 
 function PANEL:OnMouseWheeled(delta)
@@ -50,14 +47,8 @@ function PANEL:OnMouseWheeled(delta)
     -- if not self:IsHovered() then return end
 
     if self.IsYScrollAllowed and --[[self.VerticalOverflow]] self.VerticalScrollbar:IsVisible() and not self.HorizontalScrollbar:IsHovered() then
-        -- local newY = self.TargetOffset.y - delta * self.ScrollPower
-        -- local leftY = self.Canvas:GetTall() - self:GetTall()
-        -- self.TargetOffset.y = math.Clamp(newY, 0, math.max(0, leftY))
         self.TargetOffset.y = self.TargetOffset.y - delta * self.ScrollPower
     elseif self.IsXScrollAllowed and --[[self.HorizontalOverflow]] self.HorizontalScrollbar:IsVisible() and not self.VerticalScrollbar:IsHovered() then
-        -- local newX = self.TargetOffset.x - delta * self.ScrollPower
-        -- local leftX = self.Canvas:GetWide() - self:GetWide()
-        -- self.TargetOffset.x = math.Clamp(newX, 0, math.max(0, leftX))
         self.TargetOffset.x = self.TargetOffset.x - delta * self.ScrollPower
     end
 end
@@ -71,41 +62,74 @@ local function NormalizeTargetOffset(target, min, max, overscroll)
     return math.Clamp(target, -overscroll, max + overscroll)
 end
 
-function PANEL:PerformLayout(w,h)
-    -- self:UpdateScrollbars()
-    local offsetX, offsetY = self.Canvas:GetPos()
-    -- print(offsetX .. "-" .. self.TargetOffset.x, offsetY .. "-" .. self.TargetOffset.y)
+function PANEL:Think()
+    local ft = FrameTime()
+    local canvasX, canvasY = self.Canvas:GetPos()
 
-    if self.TargetOffset.y ~= offsetY then
-        local dy = math.abs(offsetY + self.TargetOffset.y)
+    local targetCanvasX = -self.TargetOffset.x
+    local targetCanvasY = -self.TargetOffset.y
+
+    local newX, newY = canvasX, canvasY
+
+    if canvasY ~= targetCanvasY then
+        local dy = math.abs(canvasY - targetCanvasY)
         local boost = 1 + 50 / (dy + 1)
-        local speed = self.ScrollSpeed * boost
-        offsetY = Lerp(FrameTime() * speed, offsetY, -self.TargetOffset.y)
+        newY = Lerp(ft * self.ScrollSpeed * boost, canvasY, targetCanvasY)
     end
-    if self.TargetOffset.x ~= offsetX then
-        local dx = math.abs(offsetX + self.TargetOffset.x)
+    if canvasX ~= targetCanvasX then
+        local dx = math.abs(canvasX - targetCanvasX)
         local boost = 1 + 50 / (dx + 1)
-        local speed = self.ScrollSpeed * boost
-        offsetX = Lerp(FrameTime() * speed, offsetX, -self.TargetOffset.x)
+        newX = Lerp(ft * self.ScrollSpeed * boost, canvasX, targetCanvasX)
     end
-    self.Canvas:SetPos(math.Round(offsetX), math.Round(offsetY))
-    self:LayoutChildren()
 
-    -- Try no limits mode
-    local canvasX, canvasY = self.Canvas:GetSize()
-    local selfX, selfY = self:GetSize()
-    
-    local maxOffsetX = math.max(0, canvasX - selfX)
-    local maxOffsetY = math.max(0, canvasY - selfY)
+    newX, newY = math.Round(newX), math.Round(newY)
+    if newX ~= canvasX or newY ~= canvasY then
+        self.Canvas:SetPos(newX, newY)
+        self:OnScrolled(-newX, -newY)
+    end
+
+    -- Normalize TargetOffset
+    local canvasW, canvasH = self.Canvas:GetSize()
+    local selfW, selfH = self:GetSize()
+    local maxOffsetX = math.max(0, canvasW - selfW)
+    local maxOffsetY = math.max(0, canvasH - selfH)
     self.TargetOffset.x = NormalizeTargetOffset(self.TargetOffset.x, 0, maxOffsetX, self.MaxOverscroll)
     self.TargetOffset.y = NormalizeTargetOffset(self.TargetOffset.y, 0, maxOffsetY, self.MaxOverscroll)
+
+    self:InvalidateLayout()
+end
+
+function PANEL:PerformLayout(w, h)
+    self:LayoutChildren()
+    self:LayoutScrollbars(w, h)
+end
+
+function PANEL:LayoutScrollbars(w, h)
+    local vsb = self.VerticalScrollbar
+    local hsb = self.HorizontalScrollbar
+
+    -- Vertical scrollbar
+    local vsbTallMargin = vsb.Margin
+    if IsValid(hsb) and hsb:IsVisible() then
+        vsbTallMargin = vsbTallMargin + hsb:GetTall()
+    end
+    vsb:SetPos(w - vsb:GetWide(), vsb.Margin)
+    vsb:SetTall(h - vsbTallMargin - vsb.Margin)
+
+    -- Horizontal scrollbar
+    local hsbWidthMargin = hsb.Margin
+    if IsValid(vsb) and vsb:IsVisible() then
+        hsbWidthMargin = vsb:GetWide()
+    end
+    hsb:SetPos(hsb.Margin, h - hsb:GetTall())
+    hsb:SetWide(w - hsbWidthMargin - hsb.Margin)
 end
 
 function PANEL:LayoutChildren()
-    local maxX, maxY = 0,0
+    local maxX, maxY = 0, 0
     for _, child in ipairs(self.Canvas:GetChildren()) do
         if IsValid(child) then
-            local x,y = child:GetPos()
+            local x, y = child:GetPos()
             maxX = math.max(maxX, x + child:GetWide())
             maxY = math.max(maxY, y + child:GetTall())
             local dock = child:GetDock()
@@ -114,13 +138,14 @@ function PANEL:LayoutChildren()
             end
         end
     end
-    self.Canvas:SetSize(maxX, maxY)
+
+    if maxX ~= self._CanvasW or maxY ~= self._CanvasH then
+        self._CanvasW = maxX
+        self._CanvasH = maxY
+        self.Canvas:SetSize(maxX, maxY)
+    end
 
     local selfW, selfT = self:GetSize()
-    -- self.VerticalOverflow = (selfT < maxY)
-    -- self.VerticalScrollbar:SetVisible(self.VerticalOverflow)
-    -- self.HorizontalOverflow = (selfW < maxX)
-    -- self.HorizontalScrollbar:SetVisible(self.HorizontalOverflow)
     self.VerticalScrollbar:SetVisible(selfT < maxY)
     self.HorizontalScrollbar:SetVisible(selfW < maxX)
 end
@@ -130,16 +155,16 @@ function PANEL:OnChildAdded(child)
     if child == self.VerticalScrollbar then return end
     if child == self.HorizontalScrollbar then return end
     timer.Simple(0, function()
-        if not IsValid(child) or not self:IsValid() then return end
-        if not child:GetParent() == self then return end
+        if not IsValid(child) or not IsValid(self) then return end
+        if child:GetParent() ~= self then return end
 
         child:SetParent(self.Canvas)
         self:LayoutChildren()
     end)
 end
 
-function PANEL:Think()
-    self:InvalidateLayout(true)
+function PANEL:OnScrolled(...)
+    -- stub: override to receive scroll position changes (x, y)
 end
 
 
@@ -163,7 +188,7 @@ end
 function PANEL:IsHorizontalScrollEnabled()
     return self.IsXScrollAllowed
 end
-function PANEL:EnableHorizontalScoll()
+function PANEL:EnableHorizontalScroll()
     self.IsXScrollAllowed = true
 end
 function PANEL:DisableHorizontalScroll()
@@ -202,17 +227,24 @@ function PANEL:SetScrollbarsMargin(margin)
     self.VerticalScrollbar.Margin = margin
     self.HorizontalScrollbar.Margin = margin
 end
+function PANEL:GetScrollOffset()
+    return self.TargetOffset.x, self.TargetOffset.y
+end
 function PANEL:ScrollToX(x, force)
     if force then
-        self.Canvas:SetX(x)
+        self.Canvas:SetX(-x)
     end
     self.TargetOffset.x = x
 end
 function PANEL:ScrollToY(y, force)
     if force then
-        self.Canvas:SetY(y)
+        self.Canvas:SetY(-y)
     end
     self.TargetOffset.y = y
+end
+function PANEL:ScrollTo(x, y, force)
+    self:ScrollToX(x, force)
+    self:ScrollToY(y, force)
 end
 
 vgui.Register(PANEL_CLASS, PANEL, "Panel")

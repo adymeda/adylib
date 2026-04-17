@@ -20,7 +20,7 @@ end
 
 
 function tableflow:WriteTable(tbl)
-    assert(flowID, "tableflow should be prepared first. Use ADYLIB.tableflow:Start(...) before sending")
+    assert(flowID, "tableflow should be prepared first. Use ADYLIB.Tableflow:Start(...) before sending")
     assert(type(tbl) == "table", "tableflow:WriteTable argument should be a table")
 
     local json = util.TableToJSON(tbl)
@@ -48,7 +48,7 @@ local function handleSinglePart(ply)
 end
 
 local function tableflowSend(ply)
-    assert(flowID and flowData, "tableflow should be prepared first. Use ADYLIB.tableflow:Start(...) before sending")
+    assert(flowID and flowData, "tableflow should be prepared first. Use ADYLIB.Tableflow:Start(...) before sending")
     
     local parts = math.ceil(#flowData / MAX_CHUNK_SIZE)
 
@@ -87,4 +87,4 @@ function tableflow:Broadcast()
     tableflowSend()
 end
 
-ADYLIB.tableflow = tableflow
+ADYLIB.Tableflow = tableflow

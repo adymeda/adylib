@@ -43,9 +43,9 @@ function ADYLIB:ScaleUI(pixels)
         return scale
     end
 end
-hook.Add("OnScreenSizeChanged", "AdyLib/ScreenResize", function()
-    ADYLIB:CalcScales()
-end)
+-- hook.Add("OnScreenSizeChanged", "AdyLib/ScreenResize", function()
+--     ADYLIB:CalcScales()
+-- end)
 
 --- **[Client]** UILerp fixes the main problem of Lerp 'tail' that looks strange in UI
 --- No `FrameTime()` or `RealFrameTime()` needed. Delta should be a number that are greater than 0 

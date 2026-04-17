@@ -41,7 +41,7 @@ net.Receive("ADY/tableflow/End", function()
     end
     if not callbacks[name] then
         flowData[name] = nil
-        print("[tableflow] Flow " .. name .. " is not handled. Handle it using ADYLIB.tableflow:Receive(" .. name .. ", ...)")
+        print("[tableflow] Flow " .. name .. " is not handled. Handle it using ADYLIB.Tableflow:Receive(" .. name .. ", ...)")
         return
     end
     if flowData[name].received ~= flowData[name].total then
@@ -75,7 +75,7 @@ net.Receive("ADY/tableflow/Single", function()
 
     if not callbacks[name] then
        flowData[name] = nil
-       print("[tableflow] Flow " .. name .. " is not handled. Handle it using ADYLIB.tableflow:Receive(" .. name .. ", ...)")
+       print("[tableflow] Flow " .. name .. " is not handled. Handle it using ADYLIB.Tableflow:Receive(" .. name .. ", ...)")
        return
     end
 
@@ -85,6 +85,6 @@ net.Receive("ADY/tableflow/Single", function()
 end)
 
 ADYLIB = ADYLIB or {}
-ADYLIB.tableflow = tableflow
+ADYLIB.Tableflow = tableflow
 
 hook.Run("AdyLib/Tableflow/Loaded")

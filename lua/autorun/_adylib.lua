@@ -9,12 +9,21 @@ end
 
 
 ---@class Addon
+---@field private __index Addon
+---@field private __AddonName string
+---@field private __AddonColor Color|nil
+---@field private __BaseDir string|nil
+---@field private __LoadSilently boolean
+---@field private __ClientFileCount number
+---@field private __ServerFileCount number
 local Addon = {}
 Addon.__index = Addon
-Addon.AddonName = "Unknown Addon"
-Addon.AddonColor = nil
-Addon.BaseDir = nil
-Addon.LoadSilently = false
+Addon.__AddonName = "Unknown Addon"
+Addon.__AddonColor = nil
+Addon.__BaseDir = nil
+Addon.__LoadSilently = false
+Addon.__ClientFileCount = 0
+Addon.__ServerFileCount = 0
 
 local LEVELS = {
     WARNING = Color(255,255,0),
@@ -30,8 +39,8 @@ function Addon:_BaseLog(level, ...)
     level = string.upper(level)
     if level == "WARNING" and not ADYLIB.Debug then return end
 
-    local prefixColor = self.AddonColor or color_white
-    MsgC(prefixColor, "[", self.AddonName)
+    local prefixColor = self.__AddonColor or color_white
+    MsgC(prefixColor, "[", self.__AddonName)
     
     local levelColor = LEVELS[level]
     local textColor = color_white
@@ -71,17 +80,17 @@ end
 ---@private
 ---@param f string
 function Addon:_ClientFileHandle(f)
-    if self.ClientFileCount then
-        self.ClientFileCount = self.ClientFileCount + 1
+    if self.__ClientFileCount then
+        self.__ClientFileCount = self.__ClientFileCount + 1
     end
 
     if SERVER then
         AddCSLuaFile(f)
-        if self.LoadSilently then return end
+        if self.__LoadSilently then return end
         self:Log("~ Sharing " .. f)
     else
         include(f)
-        if self.LoadSilently then return end
+        if self.__LoadSilently then return end
         -- self:Log("Loading " .. f .. " ✓")
         self:Log("✓ " .. f)
     end
@@ -92,11 +101,11 @@ end
 function Addon:_ServerFileHandle(f)
     if not SERVER then return end
 
-    if self.ServerFileCount then
-        self.ServerFileCount = self.ServerFileCount + 1
+    if self.__ServerFileCount then
+        self.__ServerFileCount = self.__ServerFileCount + 1
     end
 
-    if not self.LoadSilently then
+    if not self.__LoadSilently then
         self:Log("+ Loading " .. f)
     end
 
@@ -123,7 +132,7 @@ function Addon:RecursiveLoad(dir, depth)
     depth = depth or 1
     if depth >= 6 then return end
 
-    dir = dir or self.BaseDir
+    dir = dir or self.__BaseDir
 
     local files, dirs = file.Find(dir .. "/*", "LUA")
     for _, file in ipairs(files) do
@@ -144,14 +153,20 @@ function Addon:RecursiveLoad(dir, depth)
     end
 end
 
+--- Loads files from a subdirectory using default cl_/sv_/sh_ routing rules
+---@param dir string
+function Addon:LoadDirectory(dir)
+    self:RecursiveLoad(dir)
+end
+
 --- TBD Load addon files
 function Addon:Load(silentLoad)
-    silentLoad = silentLoad or self.LoadSilently or false
+    silentLoad = silentLoad or self.__LoadSilently or false
 
     -- local prefix = (SERVER and "Server") or (CLIENT and "Client") or "Void"
-    self.ClientFileCount = 0
+    self.__ClientFileCount = 0
     if SERVER then
-        self.ServerFileCount = 0
+        self.__ServerFileCount = 0
     end
 
     self:Log("Loading all files...")
@@ -160,17 +175,17 @@ function Addon:Load(silentLoad)
     local suffix = "("
     local total = 0
     if SERVER then
-        suffix = suffix .. self.ServerFileCount .. " included, " .. self.ClientFileCount .. " shared)"
-        total = self.ServerFileCount + self.ClientFileCount
-        self.ServerFileCount = nil
+        suffix = suffix .. self.__ServerFileCount .. " included, " .. self.__ClientFileCount .. " shared)"
+        total = self.__ServerFileCount + self.__ClientFileCount
+        self.__ServerFileCount = nil
     else
         suffix = ""
-        total = self.ClientFileCount
+        total = self.__ClientFileCount
     end
-    self.ClientFileCount = nil
+    self.__ClientFileCount = nil
 
     self:Log("Successfully loaded ", LEVELS.SUCCESS, total, " file" .. (total ~= 1 and "s" or "") .. " ", color_white , suffix)
-    hook.Run(self.AddonName .. "/Loaded")
+    hook.Run(self.__AddonName .. "/Loaded")
 end
 
 --- TBD Initialize addon
@@ -218,8 +233,8 @@ function ADYLIB:CreateAddon(baseDir, addonName, addonColor)
             error("Incorrect addon structure - " .. initFile .. " info.Color should be a Color, got " .. type(info.Color), 2)
         end
 
-        addon.AddonName = info.Name
-        addon.AddonColor = info.Color
+        addon.__AddonName = info.Name
+        addon.__AddonColor = info.Color
     else
         if not isstring(addonName) then
             error("Addon name should be a string, got " .. type(addonName), 2)
@@ -227,21 +242,21 @@ function ADYLIB:CreateAddon(baseDir, addonName, addonColor)
         if not IsColor(addonColor) then
             error("Addon color should be a Color, got " .. type(addonColor), 2)
         end
-        addon.AddonName = addonName
-        addon.AddonColor = addonColor
+        addon.__AddonName = addonName
+        addon.__AddonColor = addonColor
     end
-    addon.BaseDir = baseDir
+    addon.__BaseDir = baseDir
 
     setmetatable(addon, Addon)
-    self.Translator:Register(addon.AddonName)
+    self.Translator:Register(addon.__AddonName)
     return addon
 end
 
 function ADYLIB:Load()
-    self.AddonName = "AdyLib"
-    self.AddonColor = Color(52,219,160)
-    self.BaseDir = "ady"
-    self.LoadSilently = false
+    self.__AddonName = "AdyLib"
+    self.__AddonColor = Color(52,219,160)
+    self.__BaseDir = "ady"
+    self.__LoadSilently = false
 
     setmetatable(self, Addon)
     Addon.Load(ADYLIB)

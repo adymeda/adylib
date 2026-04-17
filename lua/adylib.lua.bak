@@ -1,0 +1,74 @@
+ADYLIB = {}
+
+local VERSION = "1.0"
+--- **[Server/Client]** Return the version of AdyLib
+--- @return string
+function ADYLIB:GetVersion()
+    return VERSION
+end
+function ADYLIB:Log(...)
+    MsgC(Color(52,219,160), "[AdyLib] ", color_white, ..., "\n")
+end
+
+---comment
+---@param f string
+local function ClientFileHandle(f)
+    if SERVER then
+        AddCSLuaFile(f)
+        ADYLIB:Log("Sharing " .. f .. " ✓")
+    else
+        include(f)
+        ADYLIB:Log("Loading " .. f .. " ✓")
+    end
+end
+---comment
+---@param f string
+local function ServerFileHandle(f)
+    if not SERVER then return end
+    ADYLIB:Log("Loading " .. f .. " ✓")
+    include(f)
+end
+---comment
+---@param f string
+local function SharedFileHandle(f)
+    ServerFileHandle(f)
+    ClientFileHandle(f)
+end
+local state = {
+    cl = ClientFileHandle,
+    sv = ServerFileHandle,
+    sh = SharedFileHandle
+}
+local function RecursiveLoad(baseDir, depth)
+    if not depth then
+        depth = 1
+    else
+        depth = depth + 1
+    end
+    if depth and depth >= 6 then return end
+
+    local files, dirs = file.Find(baseDir .. "/*", "LUA")
+    for _, file in ipairs(files) do
+        local path = baseDir .. "/"  .. file
+        for stateStr, func in pairs(state) do
+            if string.StartsWith(file, stateStr) then
+                func(path)
+            end
+        end
+    end
+
+    for _, subfolder in ipairs(dirs) do
+        RecursiveLoad(baseDir .. "/" .. subfolder, depth)
+    end
+end
+function ADYLIB:Load(dir)
+    if not dir then dir = "ady" end
+    local prefix
+    if SERVER then prefix = "Server"
+    else prefix = "Client" end
+    ADYLIB:Log(prefix .. " - Load started for ./" .. dir)
+    RecursiveLoad(dir)
+end
+
+ADYLIB:Load()
+hook.Run("AdyLib/Loaded")

@@ -69,15 +69,17 @@ function PANEL:Think()
 
     local parent = self.MoveTarget:GetParent()
     if not self.BoundsIgnored and parent then
+        local targetW = self.MoveTarget:GetWide()
+        local targetH = self.MoveTarget:GetTall()
         if newX < 0 then
             newX = 0
-        elseif newX + self.MoveTarget:GetWide() >= parent:GetWide() then
-            newX = parent:GetWide() - self.MoveTarget:GetWide()
+        elseif newX + targetW >= parent:GetWide() then
+            newX = parent:GetWide() - targetW
         end
         if newY < 0 then
             newY = 0
-        elseif newY + self.MoveTarget:GetTall() >= parent:GetTall() then
-            newY = parent:GetTall() - self.MoveTarget:GetTall()
+        elseif newY + targetH >= parent:GetTall() then
+            newY = parent:GetTall() - targetH
         end
     end
 
