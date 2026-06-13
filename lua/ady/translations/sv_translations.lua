@@ -109,7 +109,7 @@ end
 
 -- Register Default AdyLib translations
 if #ADYLIB.Translator:GetSources() == 0 then
-    local OWNER = "nikhegg"
+    local OWNER = "adymeda"
     local REPO = "adylib"
     local BRANCH = "main"
 
