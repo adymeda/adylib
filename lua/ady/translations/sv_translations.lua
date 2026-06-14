@@ -23,7 +23,7 @@ function ADYLIB.Translator:AddSource(source_url, origin)
         data.origin = origin
     end
     table.insert(self.__sources, data)
-    ADYLIB:LogDebug("Added " .. source_url .. " to Translator")
+    ADYLIB:Log("Added " .. source_url .. " to Translator", LogLevel.Debug)
     return true
 end
 
@@ -119,12 +119,12 @@ if #ADYLIB.Translator:GetSources() == 0 then
         if code == 403 then
             local now = os.time()
             local remaining = headers["x-ratelimit-reset"] - now
-            ADYLIB:LogWarning("You are rate-limited by GitHub. Try again in " .. remaining .. "s")
+            ADYLIB:Log("You are rate-limited by GitHub. Try again in " .. remaining .. "s", LogLevel.Warning)
             return
         end
         local data = util.JSONToTable(body)
         if not data or not data.tree then
-            ADYLIB:LogWarning("Cannot access GitHub tree of translation files. Trying to use the local ones...")
+            ADYLIB:Log("Cannot access GitHub tree of translation files. Trying to use the local ones...", LogLevel.Warning)
             return
         end
 

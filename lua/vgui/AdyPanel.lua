@@ -54,7 +54,7 @@ function PANEL:GetRoundRadii(split)
 end
 
 function PANEL:SetBackgroundColor(r, g, b, a)
-    self.__BackgroundColor = ADYLIB:ToGModColor(r, g, b, a)
+    self.__BackgroundColor = ady.Colors:ToGMColor(r, g, b, a)
 end
 function PANEL:GetBackgroundColor()
     return self.__BackgroundColor

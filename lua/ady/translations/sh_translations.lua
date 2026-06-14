@@ -142,7 +142,7 @@ function ADYLIB.Translator:Update(language)
                         -- Compare with saved SHA
                         local savedSha = self.__config[filename]
                         if not savedSha then savedSha = "NONE" end
-                        ADYLIB:LogDebug("SHA for " .. filename .. " translation\n\tSaved: " .. savedSha .. "\n\tLatest: " .. sha)
+                        ADYLIB:Log("SHA for " .. filename .. " translation\n\tSaved: " .. savedSha .. "\n\tLatest: " .. sha, LogLevel.Debug)
                         if savedSha == sha then
                             local content = file.Read(filepath, "DATA")
                             LoadTranslation(util.JSONToTable(content))
@@ -154,7 +154,7 @@ function ADYLIB.Translator:Update(language)
                             -- print("\tCalculated: " .. calcSha)
                             continue -- Do nothing cause SHA is the same
                         end
-                        ADYLIB:LogDebug("Locale update required for " .. filename)
+                        ADYLIB:Log("Locale update required for " .. filename, LogLevel.Debug)
                     end
 
                     -- Download the file
@@ -164,7 +164,7 @@ function ADYLIB.Translator:Update(language)
                         requests = requests - 1
                         self.__config[filename] = sha
                         if requests == 0 then
-                            ADYLIB:LogDebug("Saving Translator SHAs")
+                            ADYLIB:Log("Saving Translator SHAs", LogLevel.Debug)
                             local json = util.TableToJSON(ADYLIB.Translator.__config)
                             file.Write(configPath, json)
                         end
